@@ -1,0 +1,73 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace ConsoleApplication1
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            var showCount = 0;
+            if(args.Length == 0)
+            {
+                System.Console.WriteLine("Please enter a numeric argument.");
+                return;
+            }
+            var filename = args[0];
+            if (args.Length == 2)
+                showCount = int.Parse(args[1]);
+
+            string[] lines = System.IO.File.ReadAllLines(filename);
+            WordStatics ws = new WordStatics();
+            foreach (string line in lines)
+            {
+                var words = line.Split(new char[] {',',' ','.',';','\"','\''});
+                foreach(var word in words)
+                {
+                    if (!string.IsNullOrEmpty(word))
+                    {
+                        ws.Add(word);
+                    }
+                }
+            }
+            ws.Display(showCount);
+        }
+    }
+
+
+    class WordStatics
+    {
+        public Dictionary<string, int> wordMap = new Dictionary<string, int>();
+        public void Add(string word)
+        {
+            if (wordMap.ContainsKey(word))
+            {
+                wordMap[word]++;
+            }
+            else
+            {
+                wordMap.Add(word, 1);
+            }
+        }
+        public void Display(int count)
+        {
+            var sortedDict = from entry in wordMap orderby entry.Value descending select entry;
+            //wordMap = wordMap.OrderBy(o => o.Value).ToDictionary(p => p.Key, o => o.Value);
+            int i = 0;
+            var header = String.Format("{0,20} | {1,10} \n\n","WORD","COUNT");
+            Console.WriteLine(header);
+            foreach ( var word in sortedDict)
+            {
+                if (count > 0)
+                {
+                    if (i++ > count) return;
+                }
+                Console.WriteLine("{0,20} | {1,10}", word.Key, word.Value);
+            }
+
+        }
+    }
+}
