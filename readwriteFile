@@ -1,0 +1,76 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
+
+namespace ConsoleApplication1
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            string line;
+            bool dataStart = false;
+            int depthIndex = 1;
+            int imageStartIndex = 2;
+            int imageStopIndex = 57;
+            // Read the file and display it line by line.  
+            System.IO.StreamReader infile = new System.IO.StreamReader(@"D:\Temp\LAS_ML__29Mar17_135235.las");
+            FileInfo imageFile = new FileInfo(@"D:\Temp\LAS_ML__29Mar17_135235_image.txt");
+            FileInfo depthFile = new FileInfo(@"D:\Temp\LAS_ML__29Mar17_135235_GR.txt");
+            StreamWriter swImage = imageFile.CreateText();
+            StreamWriter swDepth = depthFile.CreateText();
+            var image_min = double.MaxValue;
+            var image_max = double.MinValue;
+            while ((line = infile.ReadLine()) != null)
+            {
+                if(dataStart == true)
+                {
+                    line = Regex.Replace(line, "\\s{1,}", " ");
+
+                    char[] delimeter = {' '};
+                    line = line.TrimStart(delimeter);
+                    string[] array = line.Split(delimeter);
+                    string ImageOut = string.Empty;
+                    string depthOut = string.Empty;
+                    for(int i = 0; i< array.Length;i++)
+                    {
+                        float number;
+                        if (float.TryParse(array[i], out number))
+                        {
+                            if (i == depthIndex)
+                            {
+                                depthOut = "5,";//number.ToString() + ",";
+                                continue;
+                            }
+                            else if(i >= imageStartIndex && i<= imageStopIndex)
+                            {
+                                ImageOut += number.ToString() + ",";
+                                if (number < image_min) image_min = number;
+                                if (number > image_max) image_max = number;
+                            }
+                        }
+                    }
+
+                    ImageOut = ImageOut.Remove(ImageOut.Length - 1, 1);
+                    ImageOut = "[" + ImageOut + "]" + "," + "\r\n";
+                    swImage.Write(ImageOut);
+                    swDepth.Write(depthOut);
+                }
+                if (line.StartsWith("~ASCII"))
+                {
+                    dataStart = true;
+                }
+            }
+
+            infile.Close();
+            swImage.Close();
+            swDepth.Close();
+            // Suspend the screen.  
+            System.Console.WriteLine("Finished min = {0}. max = {1}",image_min,image_max);
+        }
+    }
+}
